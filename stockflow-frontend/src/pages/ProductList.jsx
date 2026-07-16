@@ -36,12 +36,13 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
+  // Filter effect - runs whenever filter inputs change
   useEffect(() => {
-    let result = products;
+    let result = [...products];
 
-    if (search) {
+    if (search.trim()) {
       result = result.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
+        p.name.toLowerCase().includes(search.toLowerCase().trim())
       );
     }
 
@@ -54,13 +55,13 @@ export default function ProductList() {
     }
 
     setFiltered(result);
-  }, [search, categoryFilter, lowStockOnly, products]);
+  }, [search, categoryFilter, lowStockOnly, products, threshold]);
 
   const fetchProducts = async () => {
     try {
       const { data } = await api.get('/products');
-      setProducts(data.products);
-      setFiltered(data.products);
+      setProducts(data.products || []);
+      setFiltered(data.products || []);
     } catch (error) {
       console.error('Failed to load products:', error);
     } finally {
@@ -83,7 +84,7 @@ export default function ProductList() {
     setDeleting(true);
     try {
       await api.delete(`/products/${deleteModal.product.id}`);
-      setProducts(products.filter((p) => p.id !== deleteModal.product.id));
+      setProducts((prev) => prev.filter((p) => p.id !== deleteModal.product.id));
       closeDeleteModal();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to delete');
@@ -103,8 +104,8 @@ export default function ProductList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-6">
-      {/* Delete Confirmation Modal */}
+    <div className="min-h-screen bg-gray-50 pb-6 overflow-x-hidden">
+      {/* Delete Confirmation Modal - EMERALD THEME */}
       {deleteModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
@@ -116,8 +117,8 @@ export default function ProductList() {
           {/* Modal */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all">
             {/* Icon */}
-            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-7 h-7 text-red-500" />
+            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-7 h-7 text-emerald-600" />
             </div>
             
             {/* Content */}
@@ -140,7 +141,7 @@ export default function ProductList() {
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deleting ? (
                   <>
@@ -197,7 +198,7 @@ export default function ProductList() {
         </div>
 
         {/* Filter Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
@@ -287,7 +288,6 @@ export default function ProductList() {
         <div className="space-y-3">
           {filtered.map((product) => {
             const isLow = product.quantity <= threshold;
-            const profit = parseFloat(product.sellingPrice) - parseFloat(product.costPrice);
 
             return (
               <div
