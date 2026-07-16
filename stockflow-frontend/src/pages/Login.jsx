@@ -36,14 +36,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-[400px]">
+    <div className="h-screen w-screen overflow-hidden bg-white flex items-center justify-center fixed inset-0">
+      <div className="w-full max-w-[400px] px-4 sm:px-6 overflow-y-auto max-h-screen">
         {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
-            <ShoppingBag className="w-10 h-10 text-white" />
+        <div className="text-center mb-6 pt-4">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-emerald-200">
+            <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold text-emerald-700 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-700 tracking-tight">
             STOCKFLOW
           </h1>
           <p className="text-gray-500 text-sm mt-1 font-medium">
@@ -52,10 +52,10 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8">
+        <div className="bg-white rounded-3xl p-5 sm:p-8 pb-8">
           {/* Heading */}
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
+          <div className="text-center mb-5 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
               {isRegister ? 'Create Account' : 'Welcome back'}
             </h2>
             <p className="text-sm text-gray-400 mt-1">
@@ -63,7 +63,7 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* Full Name - Register only */}
             {isRegister && (
               <div>
@@ -73,7 +73,7 @@ export default function Login() {
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     placeholder="Full Name"
                     required
                   />
@@ -95,7 +95,7 @@ export default function Login() {
                     name="storeName"
                     value={form.storeName}
                     onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     placeholder="Store Name"
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -113,7 +113,7 @@ export default function Login() {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="Email"
                   required
                 />
@@ -131,7 +131,7 @@ export default function Login() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-12 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="Password"
                   required
                 />
@@ -184,7 +184,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] mt-2"
+              className="w-full py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] mt-2"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -197,7 +197,7 @@ export default function Login() {
           </form>
 
           {/* Toggle */}
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-5 sm:mt-6 pb-4">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               onClick={() => {

@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Store,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -26,57 +27,83 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col sticky top-0">
-      <div className="p-6 border-b border-gray-100">
+    <aside className="w-64 bg-white border-r border-gray-100 min-h-screen flex flex-col sticky top-0 z-30">
+      {/* Logo Section */}
+      <div className="p-6 pb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div className="w-11 h-11 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
             <Store className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-gray-900">StockFlow</h1>
-            <p className="text-xs text-gray-500">{user?.storeName || 'My Store'}</p>
+            <h1 className="font-bold text-lg text-gray-900 tracking-tight">StockFlow</h1>
+            <p className="text-xs text-gray-400 font-medium mt-0.5">
+              {user?.storeName || 'My Store'}
+            </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-2 space-y-1">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 mb-2 mt-2">
+          Menu
+        </p>
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              `group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-emerald-50 text-emerald-700 shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`
             }
           >
-            <item.icon className="w-5 h-5" />
-            {item.label}
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                ({ isActive }) => isActive && 'bg-emerald-100'
+              }`}
+            >
+              <item.icon
+                className={`w-[18px] h-[18px] transition-colors ${
+                  ({ isActive }) => (isActive ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600')
+                }`}
+              />
+            </div>
+            <span className="flex-1">{item.label}</span>
+            {({ isActive }) =>
+              isActive && <ChevronRight className="w-4 h-4 text-emerald-400" />
+            }
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-            <span className="text-sm font-semibold text-primary-700">
-              {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+      {/* Bottom Section */}
+      <div className="p-4 mt-auto">
+        <div className="bg-gray-50 rounded-2xl p-4 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-bold text-emerald-700">
+                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+              <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+            </div>
           </div>
         </div>
+
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all group"
         >
-          <LogOut className="w-5 h-5" />
-          Logout
+          <div className="w-8 h-8 rounded-lg bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-colors">
+            <LogOut className="w-[18px] h-[18px]" />
+          </div>
+          <span>Logout</span>
         </button>
       </div>
     </aside>

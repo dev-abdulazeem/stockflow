@@ -8,14 +8,13 @@ import {
   TrendingUp,
   AlertTriangle,
   DollarSign,
-  PlusCircle,
-  ShoppingCart,
   BarChart3,
   ArrowRight,
   Loader2,
   Bell,
   BellOff,
   BellRing,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -29,7 +28,6 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // Send low stock notification when dashboard loads
     if (stats?.lowStockProducts > 0 && permission === 'granted') {
       sendLocalNotification('⚠️ Low Stock Alert', {
         body: `${stats.lowStockProducts} product(s) running low. Restock now!`,
@@ -62,21 +60,21 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   const statCards = [
     {
-      title: 'Total Stock Value',
+      title: 'Stock Value',
       value: formatMoney(stats?.totalStockValue),
       icon: Package,
       color: 'bg-blue-50 text-blue-600',
       link: '/products',
     },
     {
-      title: 'Low Stock Alert',
+      title: 'Low Stock',
       value: stats?.lowStockProducts || 0,
       icon: AlertTriangle,
       color: 'bg-amber-50 text-amber-600',
@@ -87,37 +85,31 @@ export default function Dashboard() {
       title: "Today's Sales",
       value: formatMoney(stats?.todaySales),
       icon: DollarSign,
-      color: 'bg-primary-50 text-primary-600',
+      color: 'bg-emerald-50 text-emerald-600',
       link: '/sales',
     },
     {
       title: "Today's Profit",
       value: formatMoney(stats?.todayProfit),
       icon: TrendingUp,
-      color: 'bg-emerald-50 text-emerald-600',
+      color: 'bg-violet-50 text-violet-600',
       link: '/reports',
     },
   ];
 
-  const quickActions = [
-    { to: '/add-product', icon: PlusCircle, label: 'Add Product', color: 'bg-primary-600' },
-    { to: '/record-sale', icon: ShoppingCart, label: 'Record Sale', color: 'bg-emerald-600' },
-    { to: '/reports', icon: BarChart3, label: 'View Reports', color: 'bg-blue-600' },
-  ];
-
   return (
-    <div className="space-y-6">
-      {/* Header with Notification Bell */}
+    <div className="space-y-8 pb-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-500">Welcome back,</p>
-          <h1 className="page-title">{user?.name}</h1>
+          <p className="text-sm text-gray-400 font-medium">Welcome back</p>
+          <h1 className="text-2xl font-bold text-gray-900 mt-0.5">{user?.name || 'User'}</h1>
         </div>
 
         {permission !== 'granted' ? (
           <button
             onClick={requestPermission}
-            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
+            className="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-2xl flex items-center justify-center transition-colors"
             title="Enable notifications"
           >
             <BellOff className="w-5 h-5 text-gray-400" />
@@ -131,105 +123,141 @@ export default function Dashboard() {
                 actions: [{ action: 'open', title: 'Open' }],
               })
             }
-            className="w-10 h-10 bg-primary-100 hover:bg-primary-200 rounded-xl flex items-center justify-center transition-colors"
+            className="w-10 h-10 bg-emerald-50 hover:bg-emerald-100 rounded-2xl flex items-center justify-center transition-colors"
             title="Test notification"
           >
-            <BellRing className="w-5 h-5 text-primary-600" />
+            <BellRing className="w-5 h-5 text-emerald-600" />
           </button>
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3">
-        {quickActions.map((action) => (
-          <Link
-            key={action.to}
-            to={action.to}
-            className={`${action.color} text-white rounded-xl p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity`}
-          >
-            <action.icon className="w-6 h-6" />
-            <span className="text-xs font-medium text-center">{action.label}</span>
-          </Link>
-        ))}
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Stats Grid - Clean 2x2 */}
+      <div className="grid grid-cols-2 gap-4">
         {statCards.map((card) => (
           <Link
             key={card.title}
             to={card.link}
-            className={`card relative ${card.alert ? 'ring-2 ring-amber-400' : ''}`}
+            className={`bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group ${
+              card.alert ? 'ring-2 ring-amber-400 ring-offset-2' : ''
+            }`}
           >
-            <div className="flex items-start justify-between mb-2">
-              <div className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
                 <card.icon className="w-5 h-5" />
               </div>
-              <ArrowRight className="w-4 h-4 text-gray-300" />
+              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-colors" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{card.title}</p>
+            <p className="text-xl font-bold text-gray-900">{card.value}</p>
+            <p className="text-xs text-gray-400 mt-1 font-medium">{card.title}</p>
           </Link>
         ))}
       </div>
 
+      {/* Reports Banner */}
+      <Link
+        to="/reports"
+        className="block bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200 hover:shadow-xl transition-all group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <BarChart3 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-lg">Reports</p>
+              <p className="text-emerald-100 text-sm">View analytics & insights</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-emerald-200 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </Link>
+
       {/* Recent Sales */}
-      <div className="card">
+      <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-900">Recent Sales</h2>
-          <Link to="/sales" className="text-sm text-primary-600 font-medium">
+          <h2 className="font-bold text-gray-900 text-lg">Recent Sales</h2>
+          <Link
+            to="/sales"
+            className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+          >
             View All
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        {stats?.recentSales?.length > 0 ? (
-          <div className="space-y-3">
-            {stats.recentSales.map((sale) => (
-              <div
-                key={sale.id}
-                className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{sale.product.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {sale.quantity} {sale.product.unit} · {new Date(sale.createdAt).toLocaleTimeString()}
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {stats?.recentSales?.length > 0 ? (
+            <div className="divide-y divide-gray-50">
+              {stats.recentSales.map((sale) => (
+                <div
+                  key={sale.id}
+                  className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Package className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{sale.product.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {sale.quantity} {sale.product.unit} · {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-emerald-600">
+                    {currency}
+                    {parseFloat(sale.totalAmount).toLocaleString()}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-primary-600">
-                  {currency}
-                  {parseFloat(sale.totalAmount).toLocaleString()}
-                </p>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <DollarSign className="w-6 h-6 text-gray-300" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-4">No sales today</p>
-        )}
+              <p className="text-sm text-gray-400 font-medium">No sales today</p>
+              <p className="text-xs text-gray-300 mt-1">Record a sale to see it here</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Top Products */}
-      <div className="card">
-        <h2 className="font-bold text-gray-900 mb-4">Top Selling Products</h2>
-        {stats?.topProducts?.length > 0 ? (
-          <div className="space-y-3">
-            {stats.topProducts.map((product, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center text-xs font-bold text-primary-700">
-                  {i + 1}
+      <div>
+        <h2 className="font-bold text-gray-900 text-lg mb-4">Top Selling Products</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {stats?.topProducts?.length > 0 ? (
+            <div className="divide-y divide-gray-50">
+              {stats.topProducts.map((product, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-500">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+                    <p className="text-xs text-gray-400">{product.quantity} sold</p>
+                  </div>
+                  <p className="text-sm font-bold text-gray-700">
+                    {currency}
+                    {parseFloat(product.totalAmount).toLocaleString()}
+                  </p>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                  <p className="text-xs text-gray-500">{product.quantity} sold</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-700">
-                  {currency}
-                  {parseFloat(product.totalAmount).toLocaleString()}
-                </p>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="w-6 h-6 text-gray-300" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-4">No sales yet</p>
-        )}
+              <p className="text-sm text-gray-400 font-medium">No sales yet</p>
+              <p className="text-xs text-gray-300 mt-1">Start selling to see top products</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
