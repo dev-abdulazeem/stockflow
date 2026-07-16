@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
+import { useNotifications } from '../hooks/useNotifications';
 import {
   Package,
   TrendingUp,
@@ -12,16 +13,31 @@ import {
   BarChart3,
   ArrowRight,
   Loader2,
+  Bell,
+  BellOff,
+  BellRing,
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
+  const { permission, requestPermission, sendLocalNotification } = useNotifications();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    // Send low stock notification when dashboard loads
+    if (stats?.lowStockProducts > 0 && permission === 'granted') {
+      sendLocalNotification('⚠️ Low Stock Alert', {
+        body: `${stats.lowStockProducts} product(s) running low. Restock now!`,
+        data: { url: '/products' },
+        actions: [{ action: 'open', title: 'View Products' }],
+      });
+    }
+  }, [stats, permission]);
 
   const fetchStats = async () => {
     try {
@@ -91,9 +107,36 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-gray-500">Welcome back,</p>
-        <h1 className="page-title">{user?.name}</h1>
+      {/* Header with Notification Bell */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500">Welcome back,</p>
+          <h1 className="page-title">{user?.name}</h1>
+        </div>
+
+        {permission !== 'granted' ? (
+          <button
+            onClick={requestPermission}
+            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
+            title="Enable notifications"
+          >
+            <BellOff className="w-5 h-5 text-gray-400" />
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              sendLocalNotification('StockFlow Test', {
+                body: 'Notifications are working! 🎉',
+                data: { url: '/' },
+                actions: [{ action: 'open', title: 'Open' }],
+              })
+            }
+            className="w-10 h-10 bg-primary-100 hover:bg-primary-200 rounded-xl flex items-center justify-center transition-colors"
+            title="Test notification"
+          >
+            <BellRing className="w-5 h-5 text-primary-600" />
+          </button>
+        )}
       </div>
 
       {/* Quick Actions */}
