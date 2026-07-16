@@ -5,11 +5,9 @@ exports.createProduct = async (req, res) => {
   try {
     const { name, category, quantity, unit, costPrice, sellingPrice, description } = req.body;
     
-    // Handle image path
     let image = null;
     if (req.file) {
       image = req.file.path || req.file.filename;
-      // If local upload, prepend server URL
       if (!image.startsWith('http')) {
         image = `http://localhost:${process.env.PORT || 5001}/uploads/${image}`;
       }
@@ -101,7 +99,11 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.product.delete({ where: { id: parseInt(id) } });
+
+    await prisma.product.delete({ 
+      where: { id: parseInt(id) } 
+    });
+
     res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Delete product error:', error);

@@ -198,12 +198,9 @@ export default function ProductList() {
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <Link
-                      to={`/products`}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-400" />
-                    </Link>
+                    <Link to={`/edit-product/${product.id}`} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+  <Pencil className="w-4 h-4 text-gray-400" />
+</Link>
                     <button
                       onClick={() => handleDelete(product.id)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50"

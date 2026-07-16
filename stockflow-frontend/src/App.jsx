@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AddProduct from './pages/AddProduct';
+import EditProduct from './pages/EditProduct'; // ← ADD THIS
 import ProductList from './pages/ProductList';
 import RecordSale from './pages/RecordSale';
 import SaleHistory from './pages/SaleHistory';
@@ -30,6 +31,7 @@ function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="add-product" element={<AddProduct />} />
+          <Route path="edit-product/:id" element={<EditProduct />} /> {/* ← ADD THIS */}
           <Route path="products" element={<ProductList />} />
           <Route path="record-sale" element={<RecordSale />} />
           <Route path="sales" element={<SaleHistory />} />
