@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import {
@@ -14,6 +14,7 @@ import {
   FileText,
   X,
   ChevronDown,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export default function AddProduct() {
@@ -22,7 +23,21 @@ export default function AddProduct() {
   const [success, setSuccess] = useState(false);
   const [preview, setPreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+
+  // Detect if user is on a mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+      setIsMobile(mobileRegex.test(userAgent.toLowerCase()));
+    };
+    checkMobile();
+  }, []);
+
   const [form, setForm] = useState({
     name: '',
     category: '',
@@ -58,12 +73,36 @@ export default function AddProduct() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileSelect = (file) => {
     if (file) {
       setImageFile(file);
       setPreview(URL.createObjectURL(file));
     }
+    setShowPicker(false);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    handleFileSelect(file);
+    // Reset so the same file can be selected again if needed
+    e.target.value = '';
+  };
+
+  const openCamera = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
+  const openGallery = () => {
+    if (galleryInputRef.current) {
+      galleryInputRef.current.click();
+    }
+  };
+
+  const removeImage = () => {
+    setPreview(null);
+    setImageFile(null);
   };
 
   const handleSubmit = async (e) => {
@@ -163,17 +202,18 @@ export default function AddProduct() {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setPreview(null);
-                    setImageFile(null);
-                  }}
+                  onClick={removeImage}
                   className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-56 bg-white border-2 border-dashed border-gray-200 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer transition-all group">
+              <button
+                type="button"
+                onClick={() => setShowPicker(true)}
+                className="flex flex-col items-center justify-center w-full h-56 bg-white border-2 border-dashed border-gray-200 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer transition-all group"
+              >
                 <div className="w-14 h-14 bg-gray-100 group-hover:bg-emerald-100 rounded-2xl flex items-center justify-center mb-3 transition-colors">
                   <Camera className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" />
                 </div>
@@ -181,15 +221,9 @@ export default function AddProduct() {
                   Tap to upload image
                 </span>
                 <span className="text-xs text-gray-400 mt-1">
-                  JPG, PNG up to 5MB
+                  Camera or Gallery
                 </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </label>
+              </button>
             )}
           </div>
 
@@ -416,6 +450,75 @@ export default function AddProduct() {
           </button>
         </div>
       </div>
+
+      {/* ===== Image Picker Bottom Sheet ===== */}
+      {showPicker && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-40"
+            onClick={() => setShowPicker(false)}
+          />
+          {/* Sheet */}
+          <div 
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[#1c1c1e] rounded-t-3xl px-4 pt-4 pb-8"
+            style={{
+              animation: 'slideUp 0.25s ease-out',
+            }}
+          >
+            <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={openCamera}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#2c2c2e] hover:bg-[#3a3a3c] transition-colors text-left"
+              >
+                <div className="w-10 h-10 bg-[#3a3a3c] rounded-full flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white text-base font-medium">Camera</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={openGallery}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#2c2c2e] hover:bg-[#3a3a3c] transition-colors text-left"
+              >
+                <div className="w-10 h-10 bg-[#3a3a3c] rounded-full flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white text-base font-medium">Photos</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPicker(false)}
+              className="w-full mt-4 p-4 rounded-2xl bg-[#2c2c2e] hover:bg-[#3a3a3c] transition-colors text-center"
+            >
+              <span className="text-emerald-400 text-base font-semibold">Cancel</span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Hidden file inputs - Camera input with capture for mobile */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleImageChange}
+        className="hidden"
+      />
+      {/* Hidden file inputs - Gallery input without capture */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+        className="hidden"
+      />
     </div>
   );
 }
