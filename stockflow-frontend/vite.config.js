@@ -24,18 +24,33 @@ export default defineConfig({
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        id: '/',
         icons: [
           {
             src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
+            type: 'image/png'
           },
           {
             src: '/icons/icon-512x512.png',
             sizes: '512x512',
+            type: 'image/png'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            form_factor: 'wide',
+            label: 'StockFlow Dashboard'
+          },
+          {
+            src: '/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'StockFlow Mobile'
           }
         ]
       }
