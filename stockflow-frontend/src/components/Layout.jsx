@@ -7,7 +7,7 @@ export default function Layout() {
   const hideNavPaths = ['/login', '/register', '/forgot-password'];
   const showNav = !hideNavPaths.some(path => location.pathname.startsWith(path));
 
-  // Check if current page needs extra bottom padding for mobile sticky buttons
+  // Pages that need extra bottom padding for mobile sticky buttons
   const stickyButtonPaths = ['/add-product', '/edit-product', '/record-sale'];
   const needsExtraPadding = stickyButtonPaths.some(path => location.pathname.startsWith(path));
 
@@ -24,14 +24,10 @@ export default function Layout() {
       <div className="flex-1 flex flex-col min-w-0">
         <main
           className={`flex-1 w-full ${
-            needsExtraPadding
-              ? 'pb-36 md:pb-6'
-              : 'pb-24 md:pb-6'
+            needsExtraPadding ? 'pb-36 md:pb-6' : 'pb-24 md:pb-6'
           }`}
         >
-          <div className="max-w-3xl mx-auto">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
 
         {/* Mobile Bottom Navigation */}
