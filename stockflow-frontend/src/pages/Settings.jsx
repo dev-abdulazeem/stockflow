@@ -17,10 +17,13 @@ import {
   AlertTriangle,
   LogOut,
   Shield,
+  Sparkles,
   X,
   Save,
   KeyRound,
 } from 'lucide-react';
+
+import AIInsights from '../pages/AIInsights';
 
 export default function Settings() {
   const { user, updateProfile, logout } = useAuthStore();
@@ -489,6 +492,12 @@ export default function Settings() {
     );
   }
 
+  // ============ AI INSIGHTS SUB PAGE ============
+
+  if (activeSection === 'ai') {
+    return <AIInsights onBack={() => setActiveSection(null)} />;
+  }
+
   // ============ MAIN SETTINGS PAGE ============
 
   return (
@@ -562,6 +571,21 @@ export default function Settings() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900">Change Password</p>
                   <p className="text-sm text-gray-400">Update your security</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
+              </button>
+
+              {/* AI Insights Button */}
+              <button
+                onClick={() => setActiveSection('ai')}
+                className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors group"
+              >
+                <div className="w-11 h-11 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900">AI Insights</p>
+                  <p className="text-sm text-gray-400">Gemini-powered daily analysis</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
               </button>

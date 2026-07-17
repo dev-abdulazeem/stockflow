@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Detect environment — use localhost in dev, deployed URL in production
+const baseURL =
+  import.meta.env.DEV || window.location.hostname === 'localhost'
+    ? 'http://localhost:5001/api'
+    : 'https://stockflo-ochre.vercel.app/api';
+
 const api = axios.create({
-  baseURL: 'https://stockflo-ochre.vercel.app/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },

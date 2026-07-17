@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { generateInsights } = require('../services/gemini.service');
 const prisma = new PrismaClient();
 
 exports.getDashboardStats = async (req, res) => {
@@ -56,7 +57,6 @@ exports.getDashboardStats = async (req, res) => {
       (p) => p.quantity <= (user?.lowStockThreshold || 10)
     ).length;
 
-    // Get top products
     const salesWithProducts = await prisma.sale.findMany({
       include: { product: { select: { name: true } } },
     });
@@ -175,6 +175,121 @@ exports.getInventoryReport = async (req, res) => {
     });
   } catch (error) {
     console.error('Inventory report error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ========== GEMINI AI INSIGHTS ==========
+exports.getAIInsights = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+
+    // Get today's sales
+    const todaySales = await prisma.sale.findMany({
+      where: { createdAt: { gte: today } },
+      include: { product: true },
+    });
+
+    // Get yesterday's sales
+    const yesterdaySales = await prisma.sale.findMany({
+      where: { createdAt: { gte: yesterday, lt: today } },
+    });
+
+    // Get all products with their last sale
+    const products = await prisma.product.findMany({
+      include: { sales: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    });
+
+    // Get user for currency and store name
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const currency = user?.currency || '₦';
+
+    // Calculate metrics
+    const todayRevenue = todaySales.reduce((sum, s) => sum + parseFloat(s.totalAmount), 0);
+    const yesterdayRevenue = yesterdaySales.reduce((sum, s) => sum + parseFloat(s.totalAmount), 0);
+    const salesChange = yesterdayRevenue > 0 
+      ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100) 
+      : todayRevenue > 0 ? 100 : 0;
+
+    const todayProfit = todaySales.reduce((sum, s) => sum + parseFloat(s.profit), 0);
+    const profitMargin = todayRevenue > 0 
+      ? Math.round((todayProfit / todayRevenue) * 100) 
+      : 0;
+
+    // Top products today
+    const productMap = {};
+    todaySales.forEach((s) => {
+      if (!productMap[s.product.name]) {
+        productMap[s.product.name] = { name: s.product.name, quantity: 0, revenue: 0 };
+      }
+      productMap[s.product.name].quantity += s.quantity;
+      productMap[s.product.name].revenue += parseFloat(s.totalAmount);
+    });
+    const topProducts = Object.values(productMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 3);
+
+    // Slow products (no sales in 7 days)
+    const slowProducts = products
+      .filter((p) => {
+        const lastSale = p.sales[0];
+        if (!lastSale) return true;
+        return new Date(lastSale.createdAt) < lastWeek;
+      })
+      .slice(0, 3)
+      .map((p) => ({
+        name: p.name,
+        daysSinceSale: p.sales[0] 
+          ? Math.floor((today - new Date(p.sales[0].createdAt)) / (1000 * 60 * 60 * 24))
+          : 30,
+      }));
+
+    // Stock alerts
+    const threshold = user?.lowStockThreshold || 10;
+    const stockAlerts = products
+      .filter((p) => p.quantity <= threshold)
+      .map((p) => ({
+        name: p.name,
+        quantity: p.quantity,
+        unit: p.unit,
+      }));
+
+    // Prepare data for Gemini
+    const storeData = {
+      storeName: user?.storeName || 'My Store',
+      date: today.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' }),
+      currency,
+      todayRevenue: todayRevenue.toLocaleString(),
+      yesterdayRevenue: yesterdayRevenue.toLocaleString(),
+      salesChange,
+      todayProfit: todayProfit.toLocaleString(),
+      profitMargin,
+      totalProducts: products.length,
+      lowStockCount: stockAlerts.length,
+      topProducts,
+      slowProducts,
+    };
+
+    // Get AI insights from Gemini
+    const aiResponse = await generateInsights(storeData);
+
+    res.json({
+      summary: aiResponse.summary,
+      salesChange,
+      profitMargin,
+      topProducts,
+      slowProducts,
+      stockAlerts,
+      recommendations: aiResponse.recommendations,
+      closing: aiResponse.closing,
+    });
+  } catch (error) {
+    console.error('AI insights error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

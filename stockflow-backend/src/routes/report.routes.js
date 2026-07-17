@@ -6,5 +6,6 @@ const { authenticate } = require('../middleware/auth.middleware');
 router.get('/dashboard', authenticate, reportController.getDashboardStats);
 router.get('/sales-trend', authenticate, reportController.getSalesTrend);
 router.get('/inventory', authenticate, reportController.getInventoryReport);
+router.get('/ai-insights', authenticate, reportController.getAIInsights);
 
 module.exports = router;
