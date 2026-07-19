@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 
 exports.getDashboardStats = async (req, res) => {
   try {
+    const userId = req.userId;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -11,7 +12,7 @@ exports.getDashboardStats = async (req, res) => {
 
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     const [
       totalProducts,
@@ -21,25 +22,33 @@ exports.getDashboardStats = async (req, res) => {
       totalSalesAgg,
       recentSales,
     ] = await prisma.$transaction([
-      prisma.product.count(),
-      prisma.product.findMany(),
+      prisma.product.count({ where: { userId } }),
+      prisma.product.findMany({ where: { userId } }),
       prisma.sale.aggregate({
         where: {
+          userId,
           createdAt: { gte: today, lt: tomorrow },
         },
         _sum: { totalAmount: true, profit: true },
         _count: true,
       }),
       prisma.sale.aggregate({
-        where: { createdAt: { gte: startOfMonth } },
+        where: {
+          userId,
+          createdAt: { gte: startOfMonth },
+        },
         _sum: { totalAmount: true, profit: true },
       }),
       prisma.sale.aggregate({
+        where: { userId },
         _sum: { totalAmount: true, profit: true },
         _count: true,
       }),
       prisma.sale.findMany({
-        where: { createdAt: { gte: today } },
+        where: {
+          userId,
+          createdAt: { gte: today },
+        },
         include: {
           product: { select: { name: true, unit: true } },
         },
@@ -58,6 +67,7 @@ exports.getDashboardStats = async (req, res) => {
     ).length;
 
     const salesWithProducts = await prisma.sale.findMany({
+      where: { userId },
       include: { product: { select: { name: true } } },
     });
 
@@ -101,6 +111,7 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getSalesTrend = async (req, res) => {
   try {
+    const userId = req.userId;
     const { days = 30 } = req.query;
     const endDate = new Date();
     const startDate = new Date();
@@ -108,6 +119,7 @@ exports.getSalesTrend = async (req, res) => {
 
     const sales = await prisma.sale.findMany({
       where: {
+        userId,
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -142,7 +154,9 @@ exports.getSalesTrend = async (req, res) => {
 
 exports.getInventoryReport = async (req, res) => {
   try {
+    const userId = req.userId;
     const products = await prisma.product.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -182,6 +196,7 @@ exports.getInventoryReport = async (req, res) => {
 // ========== GEMINI AI INSIGHTS ==========
 exports.getAIInsights = async (req, res) => {
   try {
+    const userId = req.userId;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
@@ -189,24 +204,31 @@ exports.getAIInsights = async (req, res) => {
     const lastWeek = new Date(today);
     lastWeek.setDate(lastWeek.getDate() - 7);
 
-    // Get today's sales
+    // Get today's sales (user scoped)
     const todaySales = await prisma.sale.findMany({
-      where: { createdAt: { gte: today } },
+      where: {
+        userId,
+        createdAt: { gte: today },
+      },
       include: { product: true },
     });
 
-    // Get yesterday's sales
+    // Get yesterday's sales (user scoped)
     const yesterdaySales = await prisma.sale.findMany({
-      where: { createdAt: { gte: yesterday, lt: today } },
+      where: {
+        userId,
+        createdAt: { gte: yesterday, lt: today },
+      },
     });
 
-    // Get all products with their last sale
+    // Get all products with their last sale (user scoped)
     const products = await prisma.product.findMany({
+      where: { userId },
       include: { sales: { orderBy: { createdAt: 'desc' }, take: 1 } },
     });
 
     // Get user for currency and store name
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     const currency = user?.currency || '₦';
 
     // Calculate metrics
