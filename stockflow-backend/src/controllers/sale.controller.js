@@ -4,10 +4,16 @@ const prisma = new PrismaClient();
 exports.recordSale = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
+    const userId = req.userId;
     const qty = parseInt(quantity);
 
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(productId) },
+    if (!qty || qty <= 0) {
+      return res.status(400).json({ message: 'Invalid quantity' });
+    }
+
+    // Verify product belongs to this user
+    const product = await prisma.product.findFirst({
+      where: { id: parseInt(productId), userId },
     });
 
     if (!product) {
@@ -28,6 +34,7 @@ exports.recordSale = async (req, res) => {
     const sale = await prisma.$transaction(async (tx) => {
       const newSale = await tx.sale.create({
         data: {
+          userId,
           productId: parseInt(productId),
           quantity: qty,
           totalAmount: totalAmount.toString(),
@@ -61,9 +68,10 @@ exports.recordSale = async (req, res) => {
 exports.getAllSales = async (req, res) => {
   try {
     const { page = 1, limit = 50, startDate, endDate } = req.query;
+    const userId = req.userId;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const where = {};
+    const where = { userId };
     if (startDate && endDate) {
       where.createdAt = {
         gte: new Date(startDate + 'T00:00:00'),
@@ -101,8 +109,8 @@ exports.getAllSales = async (req, res) => {
 exports.getSaleById = async (req, res) => {
   try {
     const { id } = req.params;
-    const sale = await prisma.sale.findUnique({
-      where: { id: parseInt(id) },
+    const sale = await prisma.sale.findFirst({
+      where: { id: parseInt(id), userId: req.userId },
       include: {
         product: {
           select: { name: true, unit: true, costPrice: true, sellingPrice: true },
@@ -121,9 +129,10 @@ exports.getSaleById = async (req, res) => {
 exports.deleteSale = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.userId;
 
-    const sale = await prisma.sale.findUnique({
-      where: { id: parseInt(id) },
+    const sale = await prisma.sale.findFirst({
+      where: { id: parseInt(id), userId },
     });
 
     if (!sale) return res.status(404).json({ message: 'Sale not found' });

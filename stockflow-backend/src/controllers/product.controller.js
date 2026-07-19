@@ -1,20 +1,29 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Helper: build image URL from multer file
+const buildImageUrl = (file) => {
+  if (!file) return null;
+  const image = file.path || file.filename;
+  if (image.startsWith('http')) return image;
+  return `http://localhost:${process.env.PORT || 5001}/uploads/${image}`;
+};
+
 exports.createProduct = async (req, res) => {
   try {
     const { name, category, quantity, unit, costPrice, sellingPrice, description } = req.body;
-    
-    let image = null;
-    if (req.file) {
-      image = req.file.path || req.file.filename;
-      if (!image.startsWith('http')) {
-        image = `http://localhost:${process.env.PORT || 5001}/uploads/${image}`;
-      }
+    const userId = req.userId; // from auth middleware
+
+    const productCount = await prisma.product.count({ where: { userId } });
+    if (productCount >= 200) {
+      return res.status(403).json({ message: 'Product limit reached (200). Upgrade to add more.' });
     }
+
+    const image = buildImageUrl(req.file);
 
     const product = await prisma.product.create({
       data: {
+        userId,
         name,
         category: category || 'Uncategorized',
         quantity: parseInt(quantity) || 0,
@@ -36,6 +45,7 @@ exports.createProduct = async (req, res) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await prisma.product.findMany({
+      where: { userId: req.userId },
       orderBy: { createdAt: 'desc' },
     });
     res.json({ products });
@@ -48,8 +58,8 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(id) },
+    const product = await prisma.product.findFirst({
+      where: { id: parseInt(id), userId: req.userId },
       include: { sales: { orderBy: { createdAt: 'desc' } } },
     });
     if (!product) return res.status(404).json({ message: 'Product not found' });
@@ -64,14 +74,17 @@ exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, category, quantity, unit, costPrice, sellingPrice, description } = req.body;
-    
-    let image = undefined;
-    if (req.file) {
-      image = req.file.path || req.file.filename;
-      if (!image.startsWith('http')) {
-        image = `http://localhost:${process.env.PORT || 5001}/uploads/${image}`;
-      }
+    const userId = req.userId;
+
+    // Verify ownership before updating
+    const existing = await prisma.product.findFirst({
+      where: { id: parseInt(id), userId },
+    });
+    if (!existing) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    const image = req.file ? buildImageUrl(req.file) : undefined;
 
     const data = {
       name,
@@ -99,11 +112,17 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.userId;
 
-    await prisma.product.delete({ 
-      where: { id: parseInt(id) } 
+    // Verify ownership before deleting
+    const existing = await prisma.product.findFirst({
+      where: { id: parseInt(id), userId },
     });
+    if (!existing) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
+    await prisma.product.delete({ where: { id: parseInt(id) } });
     res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Delete product error:', error);
@@ -117,7 +136,10 @@ exports.getLowStock = async (req, res) => {
     const threshold = user?.lowStockThreshold || 10;
 
     const products = await prisma.product.findMany({
-      where: { quantity: { lte: threshold } },
+      where: {
+        userId: req.userId,
+        quantity: { lte: threshold },
+      },
       orderBy: { quantity: 'asc' },
     });
 
